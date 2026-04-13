@@ -1,71 +1,35 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-
-  let showSplash = true;
-
+  
   onMount(() => {
-    setTimeout(() => {
-      showSplash = false;
-    }, 2000);
+    goto('/register');
   });
 </script>
 
-{#if showSplash}
-  <div class="splash">
-    <div class="logo-container">
-      <h1 class="infinity-symbol">∞</h1>
-      <h1>Infinity</h1>
-    </div>
-  </div>
-{:else}
-  <div class="main">
-    <h1>Welcome to Infinity</h1>
-    <p>Your feed will appear here</p>
-  </div>
-{/if}
+<div class="loading">
+  <div class="spinner"></div>
+</div>
 
 <style>
-  .splash {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0f172a, #1e1b4b);
+  .loading {
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    background: linear-gradient(135deg, #0f172a, #1e1b4b);
   }
-
-  .logo-container {
-    text-align: center;
-    animation: pulse 1s ease-in-out infinite;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(139, 92, 246, 0.3);
+    border-top-color: #8b5cf6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
   }
-
-  .infinity-symbol {
-    font-size: 80px;
-    margin: 0;
-    background: linear-gradient(135deg, #6366f1, #ec4899);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  h1 {
-    color: white;
-    font-size: 32px;
-    margin: 0;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.9; }
-  }
-
-  .main {
-    padding: 20px;
-    text-align: center;
-    font-family: sans-serif;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>
