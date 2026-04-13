@@ -19,19 +19,15 @@ jobs:
     
     - name: Install dependencies
       run: npm install
-      working-directory: client
     
     - name: Build web app
       run: npm run build
-      working-directory: client
     
-    - name: Setup Capacitor
-      run: |
-        npm install @capacitor/core @capacitor/android
-        npx cap init Infinity com.frankwaweru.infinity --web-dir build
-        npx cap add android
-        npx cap sync
-      working-directory: client
+    - name: Install Capacitor
+      run: npm install @capacitor/core @capacitor/android @capacitor/cli
+    
+    - name: Sync Capacitor
+      run: npx cap sync
     
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -44,10 +40,9 @@ jobs:
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
-      working-directory: client
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: Infinity-App
-        path: client/android/app/build/outputs/apk/debug/*.apk
+        path: android/app/build/outputs/apk/debug/*.apk
