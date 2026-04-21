@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { auth, setToken } from '$lib/services/api';
   
   let form = {
     email: '',
@@ -11,9 +12,7 @@
   let showPassword = false;
   let rememberMe = false;
   
-  const apiUrl = 'https://your-api-url.com';
-  
-  function handleChange(e: Event) {
+  async function handleChange(e: Event) {
     const input = e.target as HTMLInputElement;
     form = { ...form, [input.name]: input.value };
   }
@@ -23,25 +22,23 @@
     loading = true;
     error = '';
     
+    console.log('Attempting login with:', form.email);
+    
     try {
-      const res = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
+      const data = await auth.login(form);
+      console.log('Login response:', data);
       
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || 'Login failed');
-      
-      // Store token if remember me is checked
-      if (rememberMe) {
-        localStorage.setItem('infinity_token', data.token);
+      if (data.token) {
+        setToken(data.token);
+        console.log('Token stored, redirecting to dashboard...');
+        goto('/dashboard');
+      } else {
+        console.log('No token in response');
+        error = 'Login successful but no token received';
       }
       
-      goto('/dashboard');
-      
     } catch (err) {
+      console.error('Login error:', err);
       error = err instanceof Error ? err.message : 'Login failed';
     } finally {
       loading = false;
@@ -49,6 +46,7 @@
   }
 </script>
 
+<!-- rest of your login form HTML stays exactly the same -->
 <div class="login-container">
   <form on:submit={handleSubmit} class="login-form">
     <div class="logo-section">
@@ -56,13 +54,13 @@
       <h2 class="title">Welcome Back</h2>
       <p class="subtitle">Sign in to continue to Infinity</p>
     </div>
-    
+
     {#if error}
       <div class="alert error">
         <span>⚠️</span> {error}
       </div>
     {/if}
-    
+
     <div class="input-group">
       <input
         type="email"
@@ -74,7 +72,7 @@
       />
       <label>Email</label>
     </div>
-    
+
     <div class="input-group">
       <input
         type={showPassword ? 'text' : 'password'}
@@ -90,10 +88,10 @@
         class="toggle-password"
         on:click={() => showPassword = !showPassword}
       >
-        {showPassword ? '🙈' : '👁️'}
+        {showPassword ? 'Hide' : 'Show'}
       </button>
     </div>
-    
+
     <div class="options-group">
       <label class="checkbox-label">
         <input type="checkbox" bind:checked={rememberMe} />
@@ -103,11 +101,11 @@
         Forgot Password?
       </a>
     </div>
-    
+
     <button type="submit" disabled={loading} class="submit-btn purple-btn">
       {loading ? 'Signing in...' : 'Login'}
     </button>
-    
+
     <div class="register-section">
       <p class="register-text">Don't have an account?</p>
       <a href="/register" class="register-link" on:click|preventDefault={() => goto('/register')}>
@@ -118,12 +116,25 @@
 </div>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    overflow: hidden;
+  }
+  
   .login-container {
-    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   }
   
@@ -170,7 +181,7 @@
   
   .input-group input {
     width: 100%;
-    padding: 14px 40px 6px 14px;
+    padding: 14px 70px 6px 14px;
     font-size: 15px;
     border: 1.5px solid #e5e7eb;
     border-radius: 10px;
@@ -212,10 +223,16 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    padding: 4px;
-    opacity: 0.6;
+    padding: 6px 8px;
+    color: #8b5cf6;
+    border-radius: 6px;
+  }
+  
+  .toggle-password:hover {
+    background: #f3f4f6;
   }
   
   .alert {
@@ -322,6 +339,16 @@
     
     .title {
       font-size: 24px;
+    }
+    
+    .input-group input {
+      padding: 12px 65px 5px 12px;
+      font-size: 14px;
+    }
+    
+    .toggle-password {
+      font-size: 12px;
+      padding: 4px 6px;
     }
   }
 </style>

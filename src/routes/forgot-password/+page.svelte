@@ -86,12 +86,25 @@
 </div>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    overflow: hidden;
+  }
+  
   .forgot-container {
-    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   }
   

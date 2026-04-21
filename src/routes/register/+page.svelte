@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { auth, setToken } from '$lib/services/api';
   
   let form = {
     username: '',
@@ -16,13 +17,10 @@
   let passwordsMatch = true;
   let acceptedTerms = false;
   
-  const apiUrl = 'https://your-api-url.com'; // Replace with your actual API URL
-  
   function handleChange(e: Event) {
     const input = e.target as HTMLInputElement;
     form = { ...form, [input.name]: input.value };
     
-    // Real-time password match checking
     if (form.password && form.confirmPassword) {
       passwordsMatch = form.password === form.confirmPassword;
     } else {
@@ -53,19 +51,16 @@
     success = '';
     
     try {
-      const res = await fetch(`${apiUrl}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: form.username,
-          email: form.email,
-          password: form.password
-        })
+      const data = await auth.register({
+        username: form.username,
+        email: form.email,
+        password: form.password
       });
       
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || 'Registration failed');
+      // Store token if returned
+      if (data.token) {
+        setToken(data.token);
+      }
       
       success = 'Registration successful! Redirecting...';
       setTimeout(() => {
@@ -80,6 +75,7 @@
   }
 </script>
 
+<!-- Rest of your register page HTML stays exactly the same -->
 <div class="register-container">
   <form on:submit={handleSubmit} class="register-form">
     <div class="logo-section">
@@ -87,19 +83,19 @@
       <h2 class="title">Create Account</h2>
       <p class="subtitle">Join Infinity to share your world</p>
     </div>
-    
+
     {#if error}
       <div class="alert error">
         <span>⚠️</span> {error}
       </div>
     {/if}
-    
+
     {#if success}
       <div class="alert success">
         <span>✅</span> {success}
       </div>
     {/if}
-    
+
     <div class="input-group">
       <input
         type="text"
@@ -111,7 +107,7 @@
       />
       <label>Username</label>
     </div>
-    
+
     <div class="input-group">
       <input
         type="email"
@@ -123,7 +119,7 @@
       />
       <label>Email</label>
     </div>
-    
+
     <div class="input-group">
       <input
         type={showPassword ? 'text' : 'password'}
@@ -139,10 +135,10 @@
         class="toggle-password"
         on:click={() => showPassword = !showPassword}
       >
-        {showPassword ? '🙈' : '👁️'}
+        {showPassword ? 'Hide' : 'Show'}
       </button>
     </div>
-    
+
     <div class="input-group">
       <input
         type={showConfirmPassword ? 'text' : 'password'}
@@ -159,10 +155,10 @@
         class="toggle-password"
         on:click={() => showConfirmPassword = !showConfirmPassword}
       >
-        {showConfirmPassword ? '🙈' : '👁️'}
+        {showConfirmPassword ? 'Hide' : 'Show'}
       </button>
     </div>
-    
+
     {#if !passwordsMatch && form.confirmPassword.length > 0}
       <p class="password-error">✗ Passwords do not match</p>
     {:else if form.password.length > 0 && form.password.length < 6}
@@ -172,7 +168,7 @@
     {:else if form.password.length >= 6 && passwordsMatch && form.confirmPassword.length > 0}
       <p class="password-success">✓ Passwords match</p>
     {/if}
-    
+
     <div class="terms-group">
       <label class="checkbox-label">
         <input 
@@ -182,18 +178,18 @@
         <span>I accept the <a href="/terms" target="_blank">Terms</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
       </label>
     </div>
-    
+
     <button type="submit" disabled={loading} class="submit-btn purple-btn">
       {loading ? 'Creating account...' : 'Register'}
     </button>
-    
+
     <div class="login-section">
       <p class="login-text">Already have an account?</p>
       <a href="/login" class="login-link" on:click|preventDefault={() => goto('/login')}>
         Login
       </a>
     </div>
-    
+
     <div class="forgot-password">
       <a href="/forgot-password" on:click|preventDefault={() => goto('/forgot-password')}>
         Forgot Password?
@@ -203,12 +199,25 @@
 </div>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    overflow: hidden;
+  }
+  
   .register-container {
-    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   }
   
@@ -218,6 +227,7 @@
     padding: 32px 28px;
     width: 100%;
     max-width: 420px;
+    margin: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   }
   
@@ -255,7 +265,7 @@
   
   .input-group input {
     width: 100%;
-    padding: 14px 40px 6px 14px;
+    padding: 14px 70px 6px 14px;
     font-size: 15px;
     border: 1.5px solid #e5e7eb;
     border-radius: 10px;
@@ -302,10 +312,16 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    padding: 4px;
-    opacity: 0.6;
+    padding: 6px 8px;
+    color: #8b5cf6;
+    border-radius: 6px;
+  }
+  
+  .toggle-password:hover {
+    background: #f3f4f6;
   }
   
   .alert {
@@ -446,7 +462,6 @@
     text-decoration: underline;
   }
   
-  /* Mobile optimizations */
   @media (max-width: 480px) {
     .register-form {
       padding: 24px 20px;
@@ -457,8 +472,13 @@
     }
     
     .input-group input {
-      padding: 12px 36px 5px 12px;
+      padding: 12px 65px 5px 12px;
       font-size: 14px;
+    }
+    
+    .toggle-password {
+      font-size: 12px;
+      padding: 4px 6px;
     }
   }
 </style>
