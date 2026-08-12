@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { auth, setToken } from '$lib/services/api';
+  import { auth } from '$lib/services/api';
+  import { saveSession } from '$lib/services/session';
   
   let form = {
     email: '',
@@ -28,14 +29,19 @@
       const data = await auth.login(form);
       console.log('Login response:', data);
       
-      if (data.token) {
-        setToken(data.token);
-        console.log('Token stored, redirecting to dashboard...');
-        goto('/dashboard');
-      } else {
-        console.log('No token in response');
-        error = 'Login successful but no token received';
-      }
+      if (data.accessToken && data.refreshToken) {
+  saveSession({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    user: data.user
+  });
+
+  console.log('Session stored, redirecting to dashboard...');
+  goto('/dashboard');
+} else {
+  console.log('Login successful but session tokens were not received');
+  error = 'Login successful but session could not be created';
+}
       
     } catch (err) {
       console.error('Login error:', err);
@@ -44,6 +50,8 @@
       loading = false;
     }
   }
+
+  
 </script>
 
 <!-- rest of your login form HTML stays exactly the same -->

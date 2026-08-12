@@ -14,25 +14,6 @@
   let posts = [];
   let loading = true;
   let error = null;
-  let isDarkMode = false;
-  
-  // Check for dark mode preference
-  if (browser) {
-    isDarkMode = localStorage.getItem('theme') === 'dark';
-  }
-  
-  function toggleTheme() {
-    isDarkMode = !isDarkMode;
-    if (browser) {
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-    }
-  }
   
   async function fetchPosts(token) {
     try {
@@ -88,7 +69,7 @@
 </script>
 
 <div class="dashboard">
-  <Header {user} {isDarkMode} {toggleTheme} onLogout={handleLogout} />
+  <Header {user} onLogout={handleLogout} />
   
   <div class="content">
     {#if loading}
@@ -115,7 +96,7 @@
 <style>
   .dashboard {
     min-height: 100vh;
-    background: #000000;
+    background: var(--bg-primary);
     padding-bottom: 80px;
     margin: 0;
     padding: 0;
@@ -131,7 +112,7 @@
   .loading, .error, .empty {
     text-align: center;
     padding: 40px;
-    color: #ffffff;
+    color: var(--text-secondary);
   }
   
   button {

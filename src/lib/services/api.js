@@ -2,57 +2,131 @@
 const config = {
   apiUrl: import.meta.env.PROD
     ? 'https://infinity-app-127d.onrender.com/api'
-    : 'http://localhost:10000/api'
+    : 'http://localhost:10001/api'
 };
 
 const API_BASE = config.apiUrl;
 
-export function getToken() {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-}
+import {
+  getAccessToken,
+  getRefreshToken,
+  saveSession,
+  clearSession
+} from './session.js';
 
-export function setToken(token) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('token', token);
-  }
+export function getToken() {
+  return getAccessToken();
 }
 
 export function removeToken() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-  }
+  clearSession();
 }
 
-async function request(endpoint, options = {}) {
-  const token = getToken();
-  
+let refreshPromise = null;
+
+async function refreshAccessToken() {
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        refreshToken
+      })
+    })
+      .then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+          const error = new Error(
+            data.message || 'Session refresh failed'
+          );
+
+          error.status = response.status;
+          throw error;
+        }
+
+
+        if (!data.accessToken || !data.refreshToken) {
+          throw new Error('Invalid refresh response');
+        }
+
+        saveSession({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken
+        });
+
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
+export async function request(endpoint, options = {}, retry = true) {
+  const token = getAccessToken();
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   const config = {
     ...options,
     headers
   };
-  
-  const response = await fetch(`${API_BASE}${endpoint}`, config);
+
+  let response = await fetch(`${API_BASE}${endpoint}`, config);
+
+  /*
+   * If the access token expired, refresh it once
+   * and retry the original request.
+   */
+  if (response.status === 401 && retry) {
+    try {
+      const newAccessToken = await refreshAccessToken();
+
+      const retryHeaders = {
+        ...options.headers,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${newAccessToken}`
+      };
+
+      response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: retryHeaders
+      });
+    } catch (refreshError) {
+      clearSession();
+      throw refreshError;
+    }
+  }
+
   const data = await response.json();
-  
+
   if (!response.ok) {
-    const error = new Error(data.message || 'Something went wrong');
+    const error = new Error(
+      data.message || 'Something went wrong'
+    );
+
     error.status = response.status;
     throw error;
   }
-  
+
   return data;
 }
 
@@ -123,4 +197,4 @@ export const posts = {
   }
 };
 
-export default { auth, posts, getToken, setToken, removeToken };
+export default { auth, posts, getToken, removeToken };

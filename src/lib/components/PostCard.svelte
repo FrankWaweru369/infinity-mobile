@@ -71,9 +71,9 @@
 
 <style>
   .post-card {
-    background: transparent;
+    background: var(--card-bg);
     width: 100%;
-    margin: 0;
+    margin: 0 0 12px 0;
     padding: 0;
     border: none;
     box-shadow: none;
@@ -128,12 +128,12 @@
   .username {
     font-weight: 600;
     font-size: 14px;
-    color: #ffffff;
+    color: var(--text-primary);
   }
   
   .timestamp {
     font-size: 11px;
-    color: #9ca3af;
+    color: var(--text-secondary);
   }
   
   .post-content {
@@ -145,7 +145,7 @@
     font-size: 14px;
     line-height: 1.5;
     margin: 0 0 12px 0;
-    color: #e5e5e5;
+    color: var(--text-primary);
   }
   
   .post-image-container {
@@ -191,7 +191,7 @@
   }
   
   .like-btn:active, .comment-btn:active {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
     transform: scale(0.96);
   }
   
@@ -201,7 +201,7 @@
   
   .action-count {
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--text-secondary);
   }
   
   .like-btn.liked .action-icon {

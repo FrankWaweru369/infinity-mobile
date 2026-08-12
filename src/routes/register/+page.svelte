@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { auth, setToken } from '$lib/services/api';
+  import { auth } from '$lib/services/api';
+  import { saveSession } from '$lib/services/session';
   
   let form = {
     username: '',
@@ -58,9 +59,15 @@
       });
       
       // Store token if returned
-      if (data.token) {
-        setToken(data.token);
-      }
+      if (data.accessToken && data.refreshToken) {
+  saveSession({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    user: data.user
+  });
+} else {
+  throw new Error('Registration successful but session could not be created');
+}
       
       success = 'Registration successful! Redirecting...';
       setTimeout(() => {

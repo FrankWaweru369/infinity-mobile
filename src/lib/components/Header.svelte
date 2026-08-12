@@ -1,11 +1,8 @@
 <script>
   import { goto } from '$app/navigation';
-  import { browser } from '$app/environment';
+  import { theme, toggleTheme } from '$lib/stores/theme';
   
   export let user = null;
-  export let token = null;
-  export let isDarkMode = false;
-  export let toggleTheme = () => {};
   export let onLogout = () => {};
   
   let isMenuOpen = false;
@@ -31,7 +28,7 @@
 
 <header class="header">
   <h1 class="logo" on:click={() => goto('/dashboard')}>
-    ∞ Infinity
+    Infinity
   </h1>
 
   {#if user}
@@ -71,16 +68,16 @@
         </button>
 
         {#if isMenuOpen}
-          <div class="dropdown" on:click={toggleMenu}>
+          <div class="dropdown">
             <!-- Dark Mode Toggle -->
             <div class="dropdown-item">
               <span class="dropdown-label">Dark Mode</span>
               <button
                 on:click={toggleTheme}
                 class="toggle-switch"
-                class:active={isDarkMode}
+                class:active={$theme === 'dark'}
               >
-                <span class="toggle-slider" class:active={isDarkMode} />
+                <span class="toggle-slider" class:active={$theme === 'dark'} />
               </button>
             </div>
 
@@ -108,25 +105,17 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
     z-index: 50;
-  }
-  
-  :global(.dark) .header {
-    background: #111827;
-    border-bottom-color: #374151;
   }
   
   .logo {
     font-size: 20px;
     font-weight: bold;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: #6b21a8;
     cursor: pointer;
+    margin: 0;
   }
   
   .header-right {
@@ -142,11 +131,7 @@
     cursor: pointer;
     padding: 6px;
     border-radius: 8px;
-    color: #4b5563;
-  }
-  
-  :global(.dark) .bell-btn {
-    color: #9ca3af;
+    color: var(--icon-color);
   }
   
   .bell-icon {
@@ -176,7 +161,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    background: linear-gradient(135deg, #6b21a8, #ec4899);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,11 +173,7 @@
   .username {
     font-size: 14px;
     font-weight: 500;
-    color: #1f2937;
-  }
-  
-  :global(.dark) .username {
-    color: #f3f4f6;
+    color: var(--text-primary);
   }
   
   .menu-container {
@@ -205,11 +186,7 @@
     cursor: pointer;
     padding: 6px;
     border-radius: 8px;
-    color: #4b5563;
-  }
-  
-  :global(.dark) .menu-btn {
-    color: #9ca3af;
+    color: var(--icon-color);
   }
   
   .menu-icon {
@@ -223,17 +200,12 @@
     right: 0;
     margin-top: 8px;
     width: 200px;
-    background: white;
+    background: var(--dropdown-bg);
     border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
     overflow: hidden;
     z-index: 60;
-  }
-  
-  :global(.dark) .dropdown {
-    background: #1f2937;
-    border-color: #374151;
   }
   
   .dropdown-item {
@@ -241,51 +213,44 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  :global(.dark) .dropdown-item {
-    border-bottom-color: #374151;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .dropdown-label {
     font-size: 14px;
-    color: #1f2937;
-  }
-  
-  :global(.dark) .dropdown-label {
-    color: #f3f4f6;
+    color: var(--text-primary);
   }
   
   .toggle-switch {
     position: relative;
     display: inline-flex;
-    height: 24px;
-    width: 44px;
     align-items: center;
+    width: 44px;
+    height: 24px;
     border-radius: 9999px;
-    background: #d1d5db;
+    background: #444;
     border: none;
     cursor: pointer;
     transition: background 0.2s;
+    padding: 0;
   }
   
   .toggle-switch.active {
-    background: #8b5cf6;
+    background: #6b21a8;
   }
   
   .toggle-slider {
-    display: inline-block;
-    height: 18px;
-    width: 18px;
-    transform: translateX(4px);
-    border-radius: 9999px;
+    position: absolute;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
     background: white;
     transition: transform 0.2s;
   }
   
   .toggle-slider.active {
-    transform: translateX(22px);
+    transform: translateX(20px);
   }
   
   .logout-btn {
