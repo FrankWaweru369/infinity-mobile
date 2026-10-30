@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { auth } from '$lib/services/api';
   import { saveSession } from '$lib/services/session';
+  import { initializePushNotifications } from '$lib/services/push-notifications.js';
   
   let form = {
     email: '',
@@ -34,6 +35,11 @@
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
     user: data.user
+  });
+
+  // Register push notifications in the background; do not delay login.
+  void initializePushNotifications().catch((err) => {
+    console.warn('Push notification initialization failed:', err);
   });
 
   console.log('Session stored, redirecting to dashboard...');

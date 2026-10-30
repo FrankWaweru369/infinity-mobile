@@ -1,9 +1,10 @@
-import { fetchReels } from './reelApi.js';
+import { fetchReels, fetchUserReels } from './reelApi.js';
 
 const DEFAULT_BATCH_SIZE = 5;
 
 export function createReelLoader({
   batchSize = DEFAULT_BATCH_SIZE,
+  userId = null,
 } = {}) {
   let reels = [];
   let nextCursor = null;
@@ -22,10 +23,17 @@ export function createReelLoader({
     loading = true;
 
     try {
-      const response = await fetchReels({
+      const options = {
         limit: batchSize,
         cursor: nextCursor,
-      });
+      };
+
+      const response = userId
+        ? await fetchUserReels({
+            ...options,
+            userId,
+          })
+        : await fetchReels(options);
 
       const incomingReels = Array.isArray(response?.reels)
         ? response.reels

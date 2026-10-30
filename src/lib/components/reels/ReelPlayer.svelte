@@ -199,13 +199,13 @@ $: if (video && preload && !active) {
   {/if}
 
   <video
-    bind:this={video}
-    playsinline
-    muted
-    controls={false}
-    preload="none"
-    poster={reel?.thumbnail?.url || ''}
-  ></video>
+  bind:this={video}
+  playsinline
+  muted={false}
+  controls={false}
+  preload="none"
+  poster={reel?.thumbnail?.url || ''}
+></video>
 
 </div>
 

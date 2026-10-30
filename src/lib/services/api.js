@@ -1,7 +1,7 @@
 // API Service for Infinity App
 const config = {
   apiUrl: import.meta.env.PROD
-    ? 'https://infinity-app-127d.onrender.com/api'
+    ? 'https://infinity-app-mobile-backend.onrender.com/api'
     : 'http://localhost:10001/api'
 };
 
@@ -137,18 +137,18 @@ export const auth = {
       body: JSON.stringify(userData)
     });
   },
-  
+
   login: (credentials) => {
     return request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials)
     });
   },
-  
+
   getMe: () => {
     return request('/auth/me');
   },
-  
+
   forgotPassword: (email) => {
     return request('/auth/forgot-password', {
       method: 'POST',
@@ -161,11 +161,11 @@ export const posts = {
   getAll: () => {
     return request('/posts');
   },
-  
+
   getOne: (id) => {
     return request(`/posts/${id}`);
   },
-  
+
   create: (formData) => {
     const token = getToken();
     return fetch(`${API_BASE}/posts`, {
@@ -176,20 +176,36 @@ export const posts = {
       body: formData
     }).then(res => res.json());
   },
-  
-  like: (postId) => {
-    return request(`/posts/${postId}/like`, {
-      method: 'PUT'
-    });
-  },
-  
+
+  like: (postId, liked) => {
+  return request(`/posts/${postId}/like`, {
+    method: 'PUT',
+    body: JSON.stringify({ liked })
+  });
+},
+
   comment: (postId, text) => {
     return request(`/posts/${postId}/comment`, {
       method: 'POST',
       body: JSON.stringify({ text })
     });
   },
-  
+
+	sendPrivateFeedback: (postId, text) => {
+  return request(`/posts/${postId}/private-feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ text })
+  });
+},
+
+getPrivateFeedback: (postId) => {
+  return request(`/posts/${postId}/private-feedback`);
+},
+
+getMyPrivateFeedback: (postId) => {
+  return request(`/posts/${postId}/my-private-feedback`);
+},
+
   delete: (postId) => {
     return request(`/posts/${postId}`, {
       method: 'DELETE'
@@ -197,4 +213,41 @@ export const posts = {
   }
 };
 
-export default { auth, posts, getToken, removeToken };
+export const notifications = {
+  getAll: ({ page = 1, limit = 20, unread = false } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit)
+    });
+
+    if (unread) {
+      params.set('unread', 'true');
+    }
+
+    return request(`/notifications?${params.toString()}`);
+  },
+
+  getUnreadCount: () => {
+    return request('/notifications/unread-count');
+  },
+
+  markRead: (id) => {
+    return request(`/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'PATCH'
+    });
+  },
+
+  markAllRead: () => {
+    return request('/notifications/read-all', {
+      method: 'PATCH'
+    });
+  }
+};
+
+export default {
+  auth,
+  posts,
+  notifications,
+  getToken,
+  removeToken
+};

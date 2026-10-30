@@ -1,11 +1,35 @@
 <script>
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import {
+    connectNotifications,
+    disconnectNotifications,
+    unreadNotificationCount
+  } from '$lib/services/notificationSocket.js';
   import { theme, toggleTheme } from '$lib/stores/theme';
+  import { unregisterPushNotifications } from '$lib/services/push-notifications.js';
   
   export let user = null;
   export let onLogout = () => {};
   
   let isMenuOpen = false;
+
+  onMount(() => {
+    if (user) connectNotifications();
+  });
+
+  async function handleLogout() {
+    isMenuOpen = false;
+
+    try {
+      await unregisterPushNotifications();
+    } catch (err) {
+      console.warn('Push device unregistration failed:', err);
+    } finally {
+      disconnectNotifications();
+      onLogout();
+    }
+  }
   
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
@@ -20,8 +44,8 @@
     if (!img) return null;
     if (img.startsWith("http")) return img;
     const API_BASE = import.meta.env.PROD
-      ? 'https://infinity-app-127d.onrender.com'
-      : 'http://localhost:10000';
+  ? 'https://infinity-app-mobile-backend.onrender.com'
+  : 'http://localhost:10000';
     return `${API_BASE}/${img.replace(/^\//, '')}`;
   }
 </script>
@@ -34,11 +58,21 @@
   {#if user}
     <div class="header-right">
       <!-- Bell Icon -->
-      <button class="bell-btn">
+      <button
+        class="bell-btn"
+        type="button"
+        aria-label={`Notifications${$unreadNotificationCount > 0 ? `, ${$unreadNotificationCount} unread` : ""}`}
+        on:click={() => goto("/notifications")}
+      >
         <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
+        {#if $unreadNotificationCount > 0}
+          <span class="notification-badge">
+            {$unreadNotificationCount > 99 ? "99+" : $unreadNotificationCount}
+          </span>
+        {/if}
       </button>
 
       <!-- Profile -->
@@ -83,7 +117,7 @@
 
             <!-- Logout Button -->
             <button
-              on:click={() => { onLogout(); isMenuOpen = false; }}
+              on:click={handleLogout}
               class="logout-btn"
             >
               Logout
@@ -137,6 +171,29 @@
   .bell-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .bell-btn {
+    position: relative;
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: -3px;
+    right: -5px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    box-sizing: border-box;
   }
   
   .profile-btn {

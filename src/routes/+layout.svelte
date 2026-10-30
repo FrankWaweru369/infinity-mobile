@@ -3,6 +3,8 @@
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
   import { theme, applyTheme } from '$lib/stores/theme';
+  import { getAccessToken } from '$lib/services/session.js';
+  import { initializePushNotifications } from '$lib/services/push-notifications.js';
   
   onMount(() => {
     if (!browser) return;
@@ -14,7 +16,15 @@
       applyTheme(currentTheme);
     });
     
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
+
+    // Restore push registration when the app opens with an existing session.
+    if (token) {
+      void initializePushNotifications().catch((err) => {
+        console.warn('Push notification initialization failed:', err);
+      });
+    }
+
     const currentPath = window.location.pathname;
     
     // Handle auth redirects
@@ -30,8 +40,8 @@
 
 <style>
   /* CSS Variables for theming */
-  :root {
-    --bg-primary: #ffffff;
+  :global(:root) {
+    --bg-primary: #d1d5db;
     --bg-secondary: #f3f4f6;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
@@ -42,7 +52,7 @@
     --card-bg: #ffffff;
   }
   
-  :root.dark {
+  :global(:root.dark) {
     --bg-primary: #000000;
     --bg-secondary: #111827;
     --text-primary: #f3f4f6;
@@ -54,20 +64,21 @@
     --card-bg: #1f2937;
   }
   
-  * {
+  :global(*) {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
   
-  html, body {
+  :global(html),
+  :global(body) {
     margin: 0 !important;
     padding: 0 !important;
     background: var(--bg-primary) !important;
     overflow-x: hidden;
   }
   
-  body {
+  :global(body) {
     min-height: 100vh;
     color: var(--text-primary);
   }
